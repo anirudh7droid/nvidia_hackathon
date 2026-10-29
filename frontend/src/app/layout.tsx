@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -24,9 +24,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${manrope.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-full overflow-hidden bg-[#050505] text-[14px] text-foreground">
+      <body className="h-full overflow-hidden bg-paper text-sm text-ink">
         <TooltipProvider delay={150}>{children}</TooltipProvider>
         <Toaster position="bottom-right" closeButton />
       </body>

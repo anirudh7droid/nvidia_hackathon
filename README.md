@@ -35,3 +35,26 @@ We split the architecture into a decoupled frontend and backend for maximum perf
 * **Multi-Modal Export:** Implementing a custom PDF engine (using `WeasyPrint`) to generate downloadable, branded pitch decks and executive summaries. 
 * **Memory Graph:** Adding persistent memory using a vector database (like Qdrant) so the agent remembers a user's previous research and builds compounding knowledge over time.
 * **Open-Source Release:** Cleaning up the repository to share our multi-agent FastAPI template with the broader NVIDIA and Nebius developer community!
+### ▶️ Running it locally
+You need Python 3.11+ and Node 20+. Run the backend and the frontend in two terminals.
+
+**1. Backend** (FastAPI on `http://127.0.0.1:8000`)
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env          # macOS/Linux: cp .env.example .env — then add your keys
+python main.py
+```
+`backend/.env` needs `NEBIUS_API_KEY` and `TAVILY_API_KEY`. It is read from the `backend` folder, so `python backend/main.py` also works from the repo root. Check it with `http://127.0.0.1:8000/health`.
+
+**2. Frontend** (Next.js on `http://localhost:3000`)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The frontend calls `NEXT_PUBLIC_API_BASE_URL` (set in `frontend/.env.local`, default `http://localhost:8000`). If the backend isn't running, the app says so in the error banner.
+
+The prompt's model menu picks one of four Nemotron models on Nebius (Super, Ultra, Nano, 3.5 Lightning), and the depth menu sets how many web searches the planner writes (Quick 2, Standard 3, Deep 5).

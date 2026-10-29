@@ -6,12 +6,11 @@ from typing import AsyncGenerator
 from openai import AsyncOpenAI
 from tavily import TavilyClient
 
-from config import NEBIUS_API_KEY, NEBIUS_BASE_URL, NEMOTRON_MODEL, TAVILY_API_KEY
+from config import NEBIUS_API_KEY, NEBIUS_BASE_URL, TAVILY_API_KEY
 
 llm = AsyncOpenAI(api_key=NEBIUS_API_KEY, base_url=NEBIUS_BASE_URL)
 tavily = TavilyClient(api_key=TAVILY_API_KEY)
 
-MAX_QUERIES = 3
 MAX_RESULTS_PER_QUERY = 5
 SOURCE_CONTENT_CHARS = 2000
 # Nemotron 3 models reason before answering by default; that burns the token budget
@@ -37,16 +36,16 @@ def _extract_json_array(text: str) -> list[str] | None:
     return queries or None
 
 
-async def plan_queries(topic: str) -> list[str]:
+async def plan_queries(topic: str, model: str, max_queries: int) -> list[str]:
     try:
         response = await llm.chat.completions.create(
-            model=NEMOTRON_MODEL,
+            model=model,
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "You are a research query planner. Given a topic, produce "
-                        f"exactly {MAX_QUERIES} specific, diverse web search queries "
+                        f"exactly {max_queries} specific, diverse web search queries "
                         "that together cover the topic well. Respond with ONLY a JSON "
                         'array of strings, e.g. ["query one", "query two", "query three"]. '
                         "No prose, no markdown fences."
@@ -65,7 +64,7 @@ async def plan_queries(topic: str) -> list[str]:
     queries = _extract_json_array(content)
     if not queries:
         queries = [topic, f"{topic} latest developments", f"{topic} analysis and impact"]
-    return queries[:MAX_QUERIES]
+    return queries[:max_queries]
 
 
 async def search_web(queries: list[str]) -> list[dict]:
@@ -108,7 +107,7 @@ def _build_context(sources: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-async def run_agent(topic: str) -> AsyncGenerator[dict, None]:
+async def run_agent(topic: str, model: str, max_queries: int) -> AsyncGenerator[dict, None]:
     topic = topic.strip()
     if not topic:
         yield _sse("error", {"message": "Topic must not be empty."})
@@ -117,7 +116,7 @@ async def run_agent(topic: str) -> AsyncGenerator[dict, None]:
     try:
         yield _sse("status", {"stage": "planning", "message": "Agent is planning research queries..."})
         try:
-            queries = await plan_queries(topic)
+            queries = await plan_queries(topic, model, max_queries)
         except Exception as exc:
             yield _sse("error", {"message": f"Nebius query planning failed: {exc}"})
             return
@@ -153,7 +152,7 @@ async def run_agent(topic: str) -> AsyncGenerator[dict, None]:
         yield _sse("status", {"stage": "synthesizing", "message": "Writing the final report..."})
 
         stream = await llm.chat.completions.create(
-            model=NEMOTRON_MODEL,
+            model=model,
             messages=[
                 {
                     "role": "system",

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
 import {
   BarChart3,
   ChevronsLeft,
@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatRelative } from "@/lib/format";
 import type { SavedReport } from "@/lib/types";
+import { EASE_IN_OUT } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type View = "home" | "analytics" | "history" | "settings";
@@ -45,39 +46,39 @@ export function AppSidebar({
   recent,
   onOpenReport,
 }: AppSidebarProps) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.aside
       initial={false}
       animate={{ width: collapsed ? 68 : 248 }}
-      transition={{ type: "spring", stiffness: 400, damping: 36 }}
-      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl"
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.25, ease: EASE_IN_OUT }}
+      className="relative flex h-full shrink-0 flex-col overflow-hidden bg-surface-alt"
     >
       {/* Brand */}
       <div className="flex h-16 shrink-0 items-center gap-2.5 px-4">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#76b900]/15 text-[#76b900]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-nvidia text-ink">
           <Sparkles className="size-4" />
         </div>
         {!collapsed && (
-          <span className="truncate text-[16px] font-semibold tracking-tight">
-            Deep<span className="text-[#76b900]">Dive</span>
-          </span>
+          <span className="truncate text-base font-semibold tracking-[-0.4px]">DeepDive</span>
         )}
       </div>
 
       {/* New research */}
-      <div className="px-3 pb-2">
+      <div className="px-3 pb-3">
         <SidebarItem
           collapsed={collapsed}
           label="New Research"
           icon={Plus}
           onClick={onNewResearch}
-          className="border border-white/[0.08] bg-white/[0.05] text-white hover:bg-white/[0.09]"
+          className="bg-nvidia font-medium text-ink hover:bg-nvidia-hover hover:text-ink motion-safe:active:scale-[0.97]"
           shortcut="N"
         />
       </div>
 
       {/* Primary nav */}
-      <nav className="flex flex-col gap-1 px-3">
+      <nav className="flex flex-col gap-0.5 px-3">
         {!collapsed && <SectionLabel>Workspace</SectionLabel>}
         {NAV.map((item) => (
           <SidebarItem
@@ -92,31 +93,27 @@ export function AppSidebar({
       </nav>
 
       {/* Recent */}
-      <div className="scrollbar-thin mt-5 min-h-0 flex-1 overflow-y-auto px-3">
+      <div className="scrollbar-thin mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
         {!collapsed && (
           <>
             <SectionLabel>Recent</SectionLabel>
             {recent.length === 0 ? (
-              <p className="px-3 py-1 text-[13px] text-white/35">
-                No reports yet.
-              </p>
+              <p className="px-3 py-1 text-sm text-mid-gray">No reports yet.</p>
             ) : (
-              <div className="flex flex-col gap-px">
+              <div className="flex flex-col gap-0.5">
                 {recent.slice(0, 8).map((item) => (
-                  <motion.button
+                  <button
                     key={item.id}
                     type="button"
                     onClick={() => onOpenReport(item)}
-                    whileHover={{ x: 2 }}
-                    transition={{ duration: 0.12 }}
-                    className="group flex items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-white/55 transition-colors hover:bg-white/[0.05] hover:text-white"
+                    className="group flex h-9 items-center gap-2 rounded-2xl px-3 text-left text-sm text-mid-gray transition-colors duration-150 hover:bg-canvas hover:text-ink"
                   >
-                    <FileText className="size-3.5 shrink-0 group-hover:text-[#76b900]" />
+                    <FileText className="size-4 shrink-0" />
                     <span className="flex-1 truncate">{item.topic}</span>
-                    <span className="shrink-0 text-[11px] text-white/30">
+                    <span className="shrink-0 text-xs text-mid-gray">
                       {formatRelative(item.createdAt)}
                     </span>
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             )}
@@ -125,17 +122,15 @@ export function AppSidebar({
       </div>
 
       {/* Footer */}
-      <div className="flex shrink-0 flex-col gap-1 border-t border-white/[0.06] p-3">
+      <div className="flex shrink-0 flex-col gap-1 p-3">
         {!collapsed && (
-          <div className="flex items-center gap-2.5 rounded-xl px-2 py-1.5">
-            <div className="flex size-8 items-center justify-center rounded-full bg-[#76b900]/15 text-[11px] font-medium text-[#76b900]">
+          <div className="flex items-center gap-2.5 px-2 py-1.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-hairline bg-paper text-xs font-medium text-ink">
               NB
             </div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <div className="truncate text-[13px] text-white/85">Nebius AI Studio</div>
-              <div className="truncate text-[11px] text-white/40">
-                nemotron · tavily
-              </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-ink">Nebius AI Studio</div>
+              <div className="truncate text-xs text-mid-gray">nemotron · tavily</div>
             </div>
           </div>
         )}
@@ -144,7 +139,7 @@ export function AppSidebar({
           label={collapsed ? "Expand" : "Collapse"}
           icon={ChevronsLeft}
           onClick={onToggle}
-          iconClassName={cn("transition-transform", collapsed && "rotate-180")}
+          iconClassName={cn("transition-[rotate] duration-250 ease-in-out motion-reduce:transition-none", collapsed && "rotate-180")}
         />
       </div>
     </motion.aside>
@@ -153,7 +148,7 @@ export function AppSidebar({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="px-3 pt-1 pb-2 text-[11px] font-medium text-white/35">
+    <div className="px-3 pt-1 pb-2 text-xs font-medium tracking-[0.6px] text-mid-gray uppercase">
       {children}
     </div>
   );
@@ -180,34 +175,34 @@ function SidebarItem({
   iconClassName,
   shortcut,
 }: SidebarItemProps) {
+  const reduceMotion = useReducedMotion();
+
   const button = (
-    <motion.button
+    <button
       type="button"
       onClick={onClick}
-      whileHover={{ scale: 1.015 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.12 }}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[14px] text-white/55 transition-colors hover:bg-white/[0.05] hover:text-white",
-        active && "bg-white/[0.07] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]",
+        "relative flex h-9 w-full items-center gap-3 rounded-2xl border border-transparent px-3 text-sm text-mid-gray transition-[color,background-color,scale] duration-150 ease-out hover:bg-canvas hover:text-ink",
+        active && "font-medium text-ink hover:bg-transparent",
         className
       )}
     >
       {active && (
         <motion.span
           layoutId="sidebar-active"
-          className="absolute top-2.5 bottom-2.5 left-0 w-1 rounded-full bg-[#76b900]"
-          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          className="absolute -inset-px rounded-2xl border border-hairline bg-paper shadow-card"
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.25, ease: EASE_IN_OUT }}
         />
       )}
-      <Icon className={cn("size-4 shrink-0", active && "text-[#76b900]", iconClassName)} />
-      {!collapsed && <span className="flex-1 truncate text-left">{label}</span>}
+      <Icon className={cn("relative size-4 shrink-0", active && "text-nvidia-text", iconClassName)} />
+      {!collapsed && <span className="relative flex-1 truncate text-left">{label}</span>}
       {!collapsed && shortcut && (
-        <kbd className="rounded-md border border-white/[0.08] px-1.5 font-mono text-[10px] text-white/40">
+        <kbd className="relative rounded-md border border-ink/15 px-1.5 font-mono text-xs text-ink/60">
           {shortcut}
         </kbd>
       )}
-    </motion.button>
+    </button>
   );
 
   if (!collapsed) return button;

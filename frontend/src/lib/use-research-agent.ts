@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import type { ResearchOptions } from "@/lib/research-options";
 import { streamResearch } from "@/lib/stream-research";
 import type {
   AgentPhase,
@@ -24,6 +25,8 @@ export type AgentState = {
   errorMessage: string | null;
   startedAt: number | null;
   finishedAt: number | null;
+  /** True for a run streamed in this session, false for one loaded from history. */
+  live: boolean;
   log: LogEntry[];
 };
 
@@ -38,6 +41,7 @@ const initialState: AgentState = {
   errorMessage: null,
   startedAt: null,
   finishedAt: null,
+  live: false,
   log: [],
 };
 
@@ -49,7 +53,7 @@ export function useResearchAgent() {
   const [state, setState] = useState<AgentState>(initialState);
   const abortRef = useRef<AbortController | null>(null);
 
-  const start = useCallback(async (topic: string) => {
+  const start = useCallback(async (topic: string, options: ResearchOptions) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -59,12 +63,14 @@ export function useResearchAgent() {
       phase: "running",
       topic,
       startedAt: Date.now(),
+      live: true,
       log: [entry("info", `Session started: "${topic}"`)],
     });
 
     try {
       await streamResearch(
         topic,
+        options,
         (event, rawData) => {
           if (rawData === "[DONE]") return;
           let data: unknown;

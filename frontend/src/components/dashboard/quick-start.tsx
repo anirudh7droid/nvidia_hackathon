@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Layers, Microscope, Swords, TrendingUp, type LucideIcon } from "lucide-react";
+import { ArrowRight, Layers, Microscope, Repeat2, Swords, TrendingUp, type LucideIcon } from "lucide-react";
+import FlickCard from "@/components/kokonutui/flick-card";
 
 type Template = {
   title: string;
@@ -41,32 +41,45 @@ type QuickStartProps = {
   onRun: (topic: string) => void;
 };
 
+/** Template cards: the front names the template, the back shows its prompt. */
 export function QuickStart({ onRun }: QuickStartProps) {
   return (
-    <div className="flex flex-wrap justify-center gap-3">
-      {TEMPLATES.map((template, index) => {
+    <div className="flex flex-wrap justify-center gap-4 pb-6">
+      {TEMPLATES.map((template) => {
         const Icon = template.icon;
         return (
-          <motion.button
+          <FlickCard
+            back={
+              <div className="flex h-full flex-col p-5">
+                <span className="text-xs font-medium tracking-[0.6px] text-mid-gray uppercase">Prompt</span>
+                <p className="mt-2 text-sm text-pretty text-ink">{template.topic}</p>
+                <button
+                  className="mt-auto flex h-9 items-center justify-center gap-1.5 rounded-2xl bg-nvidia text-sm font-medium text-ink transition-[background-color,scale] duration-150 ease-out hover:bg-nvidia-hover motion-safe:active:scale-[0.97]"
+                  onClick={() => onRun(template.topic)}
+                  type="button"
+                >
+                  Run research <ArrowRight className="size-4" />
+                </button>
+              </div>
+            }
+            className="aspect-[4/5] w-[176px]"
+            front={
+              <div className="flex h-full flex-col p-5">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-nvidia-tint text-nvidia-text">
+                  <Icon className="size-4" />
+                </div>
+                <div className="mt-auto">
+                  <div className="text-sm font-semibold text-ink">{template.title}</div>
+                  <p className="mt-0.5 text-sm text-mid-gray">{template.description}</p>
+                  <p className="mt-3 flex items-center gap-1 text-xs text-mid-gray">
+                    <Repeat2 aria-hidden="true" className="size-3.5" /> Flip for the prompt
+                  </p>
+                </div>
+              </div>
+            }
             key={template.title}
-            type="button"
-            onClick={() => onRun(template.topic)}
-            title={template.topic}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 + index * 0.06, ease: "easeOut" }}
-            whileHover={{ scale: 1.04, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="group flex w-44 flex-col gap-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-left backdrop-blur-xl transition-colors hover:border-[#76b900]/30 hover:bg-white/[0.06]"
-          >
-            <div className="flex size-9 items-center justify-center rounded-xl bg-white/[0.05] text-white/60 transition-colors group-hover:bg-[#76b900]/15 group-hover:text-[#76b900]">
-              <Icon className="size-4" />
-            </div>
-            <div>
-              <div className="text-[14px] font-medium text-white/90">{template.title}</div>
-              <p className="mt-0.5 text-[12px] text-white/45">{template.description}</p>
-            </div>
-          </motion.button>
+            label={`${template.title} template`}
+          />
         );
       })}
     </div>

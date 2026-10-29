@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { AppSidebar, type View } from "@/components/dashboard/app-sidebar";
-import { BackgroundOrbs } from "@/components/dashboard/background-orbs";
-import { CommandBar } from "@/components/dashboard/command-bar";
+import AIPrompt from "@/components/kokonutui/ai-prompt";
 import { QuickStart } from "@/components/dashboard/quick-start";
 import { ReportPanel } from "@/components/dashboard/report-panel";
 import { ExportDialog } from "@/components/dashboard/export-dialog";
@@ -13,33 +12,35 @@ import { AnalyticsView, HistoryView, SettingsView } from "@/components/dashboard
 import { useResearchAgent } from "@/lib/use-research-agent";
 import { useHistory } from "@/lib/use-history";
 import type { SavedReport } from "@/lib/types";
+import { EASE_OUT } from "@/lib/motion";
+import { DEFAULT_MODEL, type Depth } from "@/lib/research-options";
 
 export default function Dashboard() {
   const { state, start, stop, reset, load } = useResearchAgent();
   const history = useHistory();
+  const reduceMotion = useReducedMotion();
 
   const [view, setView] = useState<View>("home");
   const [collapsed, setCollapsed] = useState(false);
-  const [topic, setTopic] = useState("");
+  const [model, setModel] = useState(DEFAULT_MODEL);
+  const [depth, setDepth] = useState<Depth>("standard");
   const [exportOpen, setExportOpen] = useState(false);
   // startedAt of the run that has been saved, so "Save to history" is idempotent per run.
   const [savedRun, setSavedRun] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const running = state.phase === "running";
 
   const run = useCallback(
     (value: string) => {
-      setTopic(value);
       setView("home");
-      start(value);
+      start(value, { model, depth });
     },
-    [start]
+    [start, model, depth]
   );
 
   const newResearch = useCallback(() => {
     reset();
-    setTopic("");
     setView("home");
     setSavedRun(null);
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -48,7 +49,6 @@ export default function Dashboard() {
   const openSaved = useCallback(
     (item: SavedReport) => {
       load(item);
-      setTopic(item.topic);
       setSavedRun(item.createdAt - item.durationMs);
       setView("home");
     },
@@ -86,7 +86,7 @@ export default function Dashboard() {
         toast.info("Research cancelled");
       } else {
         const failedEarly = state.stage !== "synthesizing";
-        toast.error(failedEarly ? "Error fetching sources" : "Report synthesis failed", {
+        toast.error(failedEarly ? "Research failed" : "Report synthesis failed", {
           description: state.errorMessage ?? undefined,
         });
       }
@@ -117,11 +117,12 @@ export default function Dashboard() {
   }, [newResearch, state.phase]);
 
   const contentKey = view === "home" ? (state.phase === "idle" ? "hero" : "report") : view;
+  // Hero <-> report swaps the whole panel occasionally, so it gets a short rise.
+  // Sidebar view switches happen all day, so they only cross-fade.
+  const rise = (contentKey === "hero" || contentKey === "report") && !reduceMotion;
 
   return (
-    <div className="relative flex h-screen w-full gap-3 overflow-hidden bg-[#050505] p-3 text-foreground">
-      <BackgroundOrbs />
-
+    <div className="relative flex h-screen w-full overflow-hidden bg-paper text-ink">
       <AppSidebar
         view={view}
         onViewChange={setView}
@@ -132,35 +133,37 @@ export default function Dashboard() {
         onOpenReport={openSaved}
       />
 
-      <main className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.03] shadow-[0_20px_80px_-20px_rgb(0_0_0/0.7)] backdrop-blur-xl">
-        <AnimatePresence mode="wait">
+      <main className="relative m-3 ml-0 flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-hairline bg-paper shadow-card">
+        <AnimatePresence initial={false} mode="popLayout">
           <motion.div
             key={contentKey}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            initial={{ opacity: 0, transform: rise ? "translateY(8px)" : "translateY(0px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            exit={{ opacity: 0, transition: { duration: 0.1, ease: EASE_OUT } }}
+            transition={{ duration: rise ? 0.25 : 0.15, ease: EASE_OUT }}
             className="min-h-0 flex-1"
           >
             {contentKey === "hero" && (
-              <div className="scrollbar-thin flex h-full flex-col items-center justify-center gap-10 overflow-y-auto px-6 py-12">
+              <div className="scrollbar-thin flex h-full flex-col items-center justify-center-safe gap-10 overflow-y-auto px-6 py-12">
                 <div className="text-center">
-                  <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                  <h1 className="text-4xl font-semibold text-balance text-ink sm:text-5xl">
                     What can I help you research?
                   </h1>
-                  <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/45">
+                  <p className="mx-auto mt-4 max-w-md text-base text-pretty text-mid-gray">
                     An autonomous agent that plans, searches the web, and writes a cited report — powered by NVIDIA Nemotron.
                   </p>
                 </div>
-                <div className="w-full max-w-2xl">
-                  <CommandBar
-                    ref={inputRef}
-                    value={topic}
-                    onValueChange={setTopic}
-                    running={running}
-                    onSubmit={run}
-                  />
-                </div>
+                <AIPrompt
+                  className="max-w-2xl"
+                  depth={depth}
+                  model={model}
+                  onDepthChange={setDepth}
+                  onModelChange={setModel}
+                  onStop={stop}
+                  onSubmit={run}
+                  ref={inputRef}
+                  running={running}
+                />
                 <QuickStart onRun={run} />
               </div>
             )}
@@ -176,7 +179,7 @@ export default function Dashboard() {
             )}
 
             {view !== "home" && (
-              <div className="scrollbar-thin h-full overflow-y-auto p-6">
+              <div className="scrollbar-thin h-full overflow-y-auto p-5">
                 {view === "history" && (
                   <HistoryView items={history.items} onOpen={openSaved} onRemove={history.remove} />
                 )}

@@ -10,19 +10,19 @@ type PanelProps = {
   children: React.ReactNode;
 };
 
-/** Frosted glass card with an optional header row. */
+/** Paper card: hairline border plus the card shadow, with an optional header row. */
 export function Panel({ title, icon: Icon, actions, className, bodyClassName, children }: PanelProps) {
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl",
+        "flex flex-col overflow-hidden rounded-3xl border border-hairline bg-paper shadow-card",
         className
       )}
     >
       {title && (
-        <div className="flex h-12 shrink-0 items-center gap-2 px-5">
-          {Icon && <Icon className="size-4 text-white/50" />}
-          <span className="text-[13px] font-medium text-white/70">{title}</span>
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-hairline px-5">
+          {Icon && <Icon className="size-4 text-mid-gray" />}
+          <span className="text-sm font-medium text-ink">{title}</span>
           {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
         </div>
       )}

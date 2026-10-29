@@ -24,6 +24,8 @@ const FORMATS: { id: Format; label: string; hint: string; icon: typeof FileText;
   { id: "json", label: "JSON", hint: ".json", icon: FileJson, mime: "application/json" },
 ];
 
+const fieldLabel = "text-xs font-medium tracking-[0.6px] text-mid-gray uppercase";
+
 type ExportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -95,58 +97,59 @@ export function ExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="gap-3 rounded-3xl border border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-xl ring-0 sm:max-w-md">
-        <DialogHeader className="gap-1">
-          <DialogTitle className="text-[14px]">Export report</DialogTitle>
-          <DialogDescription className="truncate text-[12px]">{topic}</DialogDescription>
+      <DialogContent className="gap-5 sm:max-w-md">
+        <DialogHeader className="gap-1 pr-8">
+          <DialogTitle>Export report</DialogTitle>
+          <DialogDescription className="truncate">{topic}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] tracking-wider text-muted-foreground uppercase">Format</label>
-          <div className="grid grid-cols-3 gap-1.5">
+        <div className="flex flex-col gap-2">
+          <span className={fieldLabel}>Format</span>
+          <div className="grid grid-cols-3 gap-2">
             {FORMATS.map(({ id, label, hint, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
+                aria-pressed={format === id}
                 onClick={() => setFormat(id)}
                 className={cn(
-                  "flex flex-col items-start gap-1 rounded-xl border px-2.5 py-2 text-left transition-colors",
+                  "flex flex-col items-start gap-1 rounded-2xl border px-3 py-2.5 text-left transition-[background-color,border-color,scale] duration-150 ease-out motion-safe:active:scale-[0.97]",
                   format === id
-                    ? "border-[#76b900]/60 bg-[#76b900]/10"
-                    : "border-white/[0.08] bg-white/[0.03] hover:border-white/[0.15]"
+                    ? "border-nvidia bg-nvidia-tint"
+                    : "border-hairline bg-paper hover:bg-surface-alt"
                 )}
               >
-                <Icon className={cn("size-3.5", format === id ? "text-[#76b900]" : "text-muted-foreground")} />
-                <span className="text-[12px] text-foreground">{label}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">{hint}</span>
+                <Icon className={cn("size-4", format === id ? "text-nvidia-text" : "text-mid-gray")} />
+                <span className="text-sm font-medium text-ink">{label}</span>
+                <span className="font-mono text-xs text-mid-gray">{hint}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="export-filename" className="text-[10px] tracking-wider text-muted-foreground uppercase">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="export-filename" className={fieldLabel}>
             Filename
           </label>
-          <div className="flex h-8 items-center rounded-xl border border-white/[0.08] bg-white/[0.03] font-mono text-[12px] focus-within:border-[#76b900]/60">
+          <div className="flex h-9 items-center rounded-2xl border border-transparent bg-canvas font-mono text-sm transition-[background-color,border-color] duration-150 ease-out focus-within:border-hairline focus-within:bg-paper">
             <input
               id="export-filename"
               value={filename}
               onChange={(e) => setCustomName(e.target.value)}
-              className="h-full min-w-0 flex-1 bg-transparent px-2.5 outline-none"
+              className="h-full min-w-0 flex-1 bg-transparent px-3 text-ink outline-none"
             />
-            <span className="pr-2.5 text-muted-foreground">.{format}</span>
+            <span className="pr-3 text-mid-gray">.{format}</span>
           </div>
         </div>
 
-        <label className="flex cursor-pointer items-center gap-2 text-[12px] text-muted-foreground select-none">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-ink select-none">
           <span
             className={cn(
-              "flex size-3.5 items-center justify-center rounded-sm border",
-              includeSources ? "border-[#76b900] bg-[#76b900] text-black" : "border-[#3a3a3a]"
+              "flex size-4 items-center justify-center rounded-sm border transition-colors duration-150",
+              includeSources ? "border-nvidia bg-nvidia text-ink" : "border-hairline bg-paper"
             )}
           >
-            {includeSources && <Check className="size-2.5" strokeWidth={3} />}
+            {includeSources && <Check className="size-3" strokeWidth={3} />}
           </span>
           <input
             type="checkbox"
@@ -157,31 +160,21 @@ export function ExportDialog({
           Append source list ({sources.length})
         </label>
 
-        <DialogFooter className="-mx-4 -mb-4 border-white/[0.08] bg-white/[0.02] px-4 py-3">
+        <DialogFooter>
           <Button
             variant="ghost"
-            size="sm"
             onClick={onSaveToHistory}
             disabled={alreadySaved}
-            className="h-7 gap-1.5 text-[12px] sm:mr-auto"
+            className="sm:mr-auto"
           >
-            <Save className="size-3.5" />
+            <Save className="size-4" />
             {alreadySaved ? "Saved to history" : "Save to history"}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copy}
-            className="h-7 gap-1.5 border-white/[0.08] bg-transparent text-[12px]"
-          >
-            <Copy className="size-3.5" /> Copy
+          <Button variant="outline" onClick={copy}>
+            <Copy className="size-4" /> Copy
           </Button>
-          <Button
-            size="sm"
-            onClick={download}
-            className="h-7 gap-1.5 bg-[#1d4ed8] text-[12px] text-white hover:bg-[#2b5cf0]"
-          >
-            <Download className="size-3.5" /> Download
+          <Button onClick={download}>
+            <Download className="size-4" /> Download
           </Button>
         </DialogFooter>
       </DialogContent>
