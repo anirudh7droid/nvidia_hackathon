@@ -1,8 +1,11 @@
 import type { ResearchOptions } from "@/lib/research-options";
 
+// On Vercel the backend shares the frontend's domain under /api, so production
+// builds default to same-origin. `npm run dev` targets the local FastAPI server.
 // Drop a trailing slash so `${API_BASE_URL}/api/...` never doubles it.
 export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "")
 ).replace(/\/+$/, "");
 
 export type SSEHandler = (event: string, data: string) => void;

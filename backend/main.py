@@ -41,7 +41,9 @@ async def research_stream(topic: str, model: str, depth: str) -> AsyncGenerator[
     yield {"event": "end", "data": "[DONE]"}
 
 
+# /api/health is the public path on Vercel, where only /api/* reaches this service.
 @app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"status": "ok"}
 
