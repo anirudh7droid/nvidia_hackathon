@@ -1,4 +1,5 @@
 import json
+import os
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
@@ -12,9 +13,10 @@ from config import DEFAULT_MODEL, DEPTH_QUERIES, Depth, Model
 app = FastAPI(title="Autonomous Deep-Dive Research Agent")
 
 # Wildcard origins are only valid without credentials; the API is cookie-free.
+# Set ALLOWED_ORIGINS (comma-separated) in production to lock it to the frontend.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

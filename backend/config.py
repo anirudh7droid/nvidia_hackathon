@@ -25,6 +25,6 @@ Depth = Literal["quick", "standard", "deep"]
 DEPTH_QUERIES: dict[str, int] = {"quick": 2, "standard": 3, "deep": 5}
 
 if not NEBIUS_API_KEY:
-    raise RuntimeError("NEBIUS_API_KEY is not set. Add it to backend/.env")
+    raise RuntimeError("NEBIUS_API_KEY is not set. Add it to backend/.env locally, or to the Vercel project's environment variables")
 if not TAVILY_API_KEY:
-    raise RuntimeError("TAVILY_API_KEY is not set. Add it to backend/.env")
+    raise RuntimeError("TAVILY_API_KEY is not set. Add it to backend/.env locally, or to the Vercel project's environment variables")

@@ -58,3 +58,17 @@ npm run dev
 The frontend calls `NEXT_PUBLIC_API_BASE_URL` (set in `frontend/.env.local`, default `http://localhost:8000`). If the backend isn't running, the app says so in the error banner.
 
 The prompt's model menu picks one of four Nemotron models on Nebius (Super, Ultra, Nano, 3.5 Lightning), and the depth menu sets how many web searches the planner writes (Quick 2, Standard 3, Deep 5).
+
+### ☁️ Deploying to Vercel
+The repo deploys as **two Vercel projects** from the same Git repository: one for the API and one for the UI.
+
+**1. Backend project.** Import the repo in Vercel and set **Root Directory** to `backend`. Vercel detects FastAPI in `main.py` and installs `requirements.txt` on Python 3.12 (see `.python-version`). Add these environment variables:
+- `NEBIUS_API_KEY`
+- `TAVILY_API_KEY`
+- `ALLOWED_ORIGINS` (optional): the frontend URL, for example `https://deepdive.vercel.app`. If it is not set, any origin can call the API.
+
+Deploy, then check `https://<backend>.vercel.app/health`.
+
+**2. Frontend project.** Import the same repo again and set **Root Directory** to `frontend`. Vercel detects Next.js. Set `NEXT_PUBLIC_API_BASE_URL` to the backend URL from step 1. This value is built into the bundle, so redeploy the frontend after you change it.
+
+Research runs stream over SSE for up to a minute or so. That fits inside Vercel's default function duration when Fluid compute is on (300 s, on by default for new projects).

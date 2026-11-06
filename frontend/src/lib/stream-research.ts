@@ -1,7 +1,9 @@
 import type { ResearchOptions } from "@/lib/research-options";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+// Drop a trailing slash so `${API_BASE_URL}/api/...` never doubles it.
+export const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
+).replace(/\/+$/, "");
 
 export type SSEHandler = (event: string, data: string) => void;
 
